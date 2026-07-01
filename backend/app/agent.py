@@ -1,6 +1,8 @@
 from openai import OpenAI
-from app.tool import search_web
+from app.tools import search_web
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
