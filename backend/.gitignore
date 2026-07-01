@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# virtual env
+venv/
+env/
+.venv/
+
+# environment variables
+.env
+
+# logs
+*.log
+
+# testing
+.pytest_cache/
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+
+# Chroma / embeddings (if local)
+chroma_db/
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
