@@ -2,7 +2,8 @@ from pydantic import BaseModel, Field
 from typing import List
 class ResearchRequest(BaseModel):
     topic: str = Field(..., description="The main topic or question to research.")
-    max_queries: int = Field(default=3, ge=3, le=5, description="Number of search queries to generate (3 to 5).")
+    max_queries: int = Field(default=3, le=3)
+    
 class Source(BaseModel):
     title: str = Field(..., description="Title of the source webpage.")
     url: str = Field(..., description="URL of the source webpage.")

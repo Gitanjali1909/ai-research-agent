@@ -11,7 +11,7 @@ from app.tools import (
     get_embeddings,
     chunk_text,
     ChromaManager,
-    openai_client
+    groq_client
 )
 
 logger = logging.getLogger("research_agent.agent")
@@ -25,8 +25,8 @@ Topic: {topic}
 """
 
     try:
-        response = await openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+        response = await groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
         )
 
@@ -97,8 +97,9 @@ async def index_results(session_id, results):
     return True
 
 async def generate_report(topic, context, sources):
+    context = context[:4000]
     prompt = f"""
-Write a structured research report.
+Write a detailed research report.
 
 Topic: {topic}
 
@@ -108,9 +109,8 @@ Context:
 Return JSON with:
 overview, key_insights, comparisons, conclusion
 """
-
-    response = await openai_client.chat.completions.create(
-        model="gpt-4o-mini",
+    response = await groq_client.chat.completions.create(
+        model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
     )
 
@@ -124,6 +124,26 @@ overview, key_insights, comparisons, conclusion
         conclusion="",
         sources=sources
     )
+
+#fake
+# async def run_research_pipeline(topic: str, max_queries: int = 3):
+#     return {
+#         "topic": topic,
+#         "overview": "This is a mock overview for frontend testing.",
+#         "key_insights": [
+#             "AI is growing rapidly",
+#             "Multi-agent systems are trending",
+#             "RAG is widely used"
+#         ],
+#         "comparisons": [
+#             "RAG vs Fine-tuning",
+#             "OpenAI vs Open-source models"
+#         ],
+#         "conclusion": "AI research agents are powerful tools for automation.",
+#         "sources": [
+#             {"title": "Example Source", "url": "https://example.com"}
+#         ]
+#     }
 
 async def run_research_pipeline(topic: str, max_queries: int = 3):
     session_id = uuid.uuid4().hex

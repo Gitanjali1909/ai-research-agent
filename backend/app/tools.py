@@ -4,7 +4,7 @@ import logging
 import uuid
 from typing import List, Dict, Any
 
-from openai import AsyncOpenAI
+from groq import AsyncGroq
 import chromadb
 from dotenv import load_dotenv
 
@@ -13,11 +13,11 @@ load_dotenv()
 logger = logging.getLogger("research_agent.tools")
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+groq_client = AsyncGroq(api_key=GROQ_API_KEY)
 
-async def search_tavily(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
+async def search_tavily(query: str, max_results: int = 3) -> List[Dict[str, Any]]:
     if not TAVILY_API_KEY:
         logger.error("TAVILY_API_KEY not set")
         return []
@@ -40,16 +40,23 @@ async def search_tavily(query: str, max_results: int = 5) -> List[Dict[str, Any]
         logger.error(f"Tavily error: {e}")
         return []
 
+
+def simple_embedding(text: str, dim: int = 128) -> List[float]:
+    vec = [0.0] * dim
+
+    for i, char in enumerate(text):
+        vec[i % dim] += float(ord(char))
+
+    return vec
+
+
 async def get_embeddings(texts: List[str]) -> List[List[float]]:
     try:
-        response = await openai_client.embeddings.create(
-            model="text-embedding-3-small",
-            input=texts
-        )
-        return [item.embedding for item in response.data]
+        return [simple_embedding(t) for t in texts]
     except Exception as e:
         logger.error(f"Embedding error: {e}")
         return []
+
 
 def chunk_text(text: str, chunk_size_words=200, overlap_words=40):
     words = text.split()
