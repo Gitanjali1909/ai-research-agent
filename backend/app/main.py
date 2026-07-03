@@ -14,13 +14,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger("research_agent.main")
 
-
 app = FastAPI(
     title="AI Research Agent API",
-    description="A multi-step AI research backend using Tavily, ChromaDB, and OpenAI.",
+    description="A multi-step AI research backend using Tavily and Groq.",
     version="1.0.0"
 )
 
+# simple rate limit
 last_called = {}
 
 @app.middleware("http")
@@ -35,35 +35,42 @@ async def rate_limit(request: Request, call_next):
         )
 
     last_called[ip] = now
-    return await call_next(request)
+    response = await call_next(request)
+    return response
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ENV
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not TAVILY_API_KEY:
     logger.warning("TAVILY_API_KEY not set.")
-if not OPENAI_API_KEY:
-    logger.warning("OPENAI_API_KEY not set.")
 
+if not GROQ_API_KEY:
+    logger.warning("GROQ_API_KEY not set.")
+
+# imports after env
 from app.schemas import ResearchRequest, ResearchResponse
 from app.agent import run_research_pipeline
 
+# health route
 @app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check():
     return {
         "status": "healthy",
-        "openai_key_configured": bool(OPENAI_API_KEY),
+        "groq_key_configured": bool(GROQ_API_KEY),
         "tavily_key_configured": bool(TAVILY_API_KEY)
     }
 
+# main route
 @app.post("/research", response_model=ResearchResponse, status_code=status.HTTP_200_OK)
 async def research(request: ResearchRequest):
 
@@ -73,7 +80,7 @@ async def research(request: ResearchRequest):
             detail="Topic cannot be empty."
         )
 
-    if not TAVILY_API_KEY or not OPENAI_API_KEY:
+    if not TAVILY_API_KEY or not GROQ_API_KEY:
         raise HTTPException(
             status_code=503,
             detail="Missing API keys."
@@ -84,7 +91,7 @@ async def research(request: ResearchRequest):
     try:
         report = await run_research_pipeline(
             request.topic,
-            min(request.max_queries, 3)  # ✅ hard cap
+            min(request.max_queries, 3)
         )
         return report
 
