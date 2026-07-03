@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search } from "lucide-react";
+import { Sliders } from "lucide-react";
 
 interface QueryBoxProps {
   onSearch: (topic: string, maxQueries: number) => void;
@@ -9,6 +9,7 @@ interface QueryBoxProps {
 export default function QueryBox({ onSearch, isLoading }: QueryBoxProps) {
   const [topic, setTopic] = useState("");
   const [maxQueries, setMaxQueries] = useState(3);
+  const [showConfig, setShowConfig] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,69 +18,81 @@ export default function QueryBox({ onSearch, isLoading }: QueryBoxProps) {
   };
 
   return (
-    <form 
-      onSubmit={handleSubmit}
-      className="w-full max-w-2xl mx-auto p-6 rounded-2xl bg-card border border-border/80 shadow-xl transition-all duration-300 hover:border-indigo-500/30"
-    >
-      <div className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="topic" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Research Topic or Question
-          </label>
-          <div className="relative">
-            <input
-              id="topic"
-              type="text"
-              placeholder="e.g. Gemini 1.5 Pro architecture, quantum computing status..."
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              disabled={isLoading}
-              required
-              className="w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-border rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-sm md:text-base"
-            />
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-          </div>
-        </div>
+    <div className="w-full max-w-[680px] mx-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full bg-zinc-900/30 border border-zinc-800/80 rounded-xl p-1.5 transition-all duration-200 focus-within:border-zinc-700"
+      >
+        <div className="flex items-center gap-3 px-3">
+          <input
+            id="topic-input"
+            type="text"
+            placeholder="Search topic or ask a question..."
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            disabled={isLoading}
+            required
+            aria-label="Search topic"
+            className="flex-1 bg-transparent py-2.5 text-zinc-200 placeholder-zinc-500 focus:outline-none text-[15px] disabled:opacity-60"
+          />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2">
-          <div className="flex-1">
-            <div className="flex justify-between items-center mb-1">
-              <label htmlFor="queries-slider" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Number of search queries
-              </label>
-              <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
-                {maxQueries} queries
-              </span>
-            </div>
-            <input
-              id="queries-slider"
-              type="range"
-              min="3"
-              max="5"
-              step="1"
-              value={maxQueries}
-              onChange={(e) => setMaxQueries(parseInt(e.target.value))}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowConfig(!showConfig)}
               disabled={isLoading}
-              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-55 disabled:cursor-not-allowed"
-            />
-            <div className="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
-              <span>3 (Fast)</span>
-              <span>4 (Balanced)</span>
-              <span>5 (Thorough)</span>
-            </div>
-          </div>
+              aria-label="Toggle research depth settings"
+              className={`p-2 rounded-lg text-zinc-500 hover:text-zinc-350 hover:bg-zinc-900/60 transition-all ${
+                showConfig ? "bg-zinc-900 text-zinc-300" : ""
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+            </button>
 
-          <div className="flex items-end justify-end">
             <button
               type="submit"
               disabled={isLoading || !topic.trim()}
-              className="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-background active:scale-[0.98] transition-all duration-200 shadow-md shadow-indigo-600/20 disabled:bg-indigo-600/40 disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed text-sm"
+              className="px-4 py-2 bg-zinc-200 text-zinc-900 text-xs font-semibold rounded-lg hover:bg-zinc-100 disabled:bg-zinc-900 disabled:text-zinc-600 transition-all active:scale-[0.98]"
             >
-              {isLoading ? "Researching..." : "Start Research"}
+              {isLoading ? "Searching" : "Search"}
             </button>
           </div>
         </div>
-      </div>
-    </form>
+
+        {showConfig && (
+          <div className="border-t border-zinc-900/60 mt-1.5 pt-3 pb-2 px-3 animate-fadeIn">
+            <div className="flex items-center justify-between gap-4">
+              
+              {/* proper label added */}
+              <label
+                htmlFor="depth-range"
+                className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider"
+              >
+                Research Depth
+              </label>
+
+              <div className="flex items-center gap-3 flex-1 max-w-[200px]">
+                <input
+                  id="depth-range"
+                  type="range"
+                  min="3"
+                  max="5"
+                  step="1"
+                  value={maxQueries}
+                  onChange={(e) => setMaxQueries(parseInt(e.target.value))}
+                  disabled={isLoading}
+                  aria-label="Select research depth"
+                  className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-300"
+                />
+
+                <span className="text-[11px] font-mono font-medium text-zinc-400 w-10 text-right">
+                  {maxQueries} q
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </form>
+    </div>
   );
 }

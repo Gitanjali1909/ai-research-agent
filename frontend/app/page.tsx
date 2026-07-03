@@ -6,7 +6,7 @@ import { ResearchReport } from "@/types";
 import QueryBox from "@/components/QueryBox";
 import ReportView from "@/components/ReportView";
 import Loader from "@/components/Loader";
-import { History, Trash2, Cpu, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -16,25 +16,25 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      const storedHistory = localStorage.getItem("research_history");
-      if (storedHistory) {
-        setHistory(JSON.parse(storedHistory));
+      const stored = localStorage.getItem("research_history");
+      if (stored) {
+        setHistory(JSON.parse(stored));
       }
     } catch (e) {
-      console.error("Failed to load research history:", e);
+      console.error(e);
     }
   }, []);
 
   const saveToHistory = (newReport: ResearchReport) => {
     try {
-      const filteredHistory = history.filter(
+      const filtered = history.filter(
         (item) => item.topic.toLowerCase() !== newReport.topic.toLowerCase()
       );
-      const updatedHistory = [newReport, ...filteredHistory].slice(0, 3);
-      setHistory(updatedHistory);
-      localStorage.setItem("research_history", JSON.stringify(updatedHistory));
+      const updated = [newReport, ...filtered].slice(0, 3);
+      setHistory(updated);
+      localStorage.setItem("research_history", JSON.stringify(updated));
     } catch (e) {
-      console.error("Failed to save research history:", e);
+      console.error(e);
     }
   };
 
@@ -49,100 +49,71 @@ export default function Home() {
       saveToHistory(data);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "An unexpected error occurred while executing the research agent pipeline.");
+      setError(err.message || "An error occurred during search pipeline execution.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectHistory = (selectedReport: ResearchReport) => {
-    setReport(selectedReport);
-    setError(null);
-  };
-
-  const handleClearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem("research_history");
-  };
-
   return (
-    <main className="min-h-screen py-10 px-4 md:px-8 max-w-5xl mx-auto space-y-8 print:py-0 print:px-0">
-      <header className="flex items-center justify-between border-b border-border/60 pb-6 print:hidden">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
-            <Cpu className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-100 md:text-2xl">
-              Research Agent Backend Console
-            </h1>
-            <p className="text-xs text-slate-400">
-              Multi-step intelligence pipeline using OpenAI, Tavily & ChromaDB
-            </p>
-          </div>
+    <div className="min-h-screen bg-zinc-950 text-zinc-200 flex flex-col font-sans">
+      {/* Small elegant header */}
+      <header className="py-6 px-6 border-b border-zinc-900/40 print:hidden">
+        <div className="max-w-[680px] mx-auto flex items-center justify-between">
+          <span className="text-xs font-mono tracking-widest text-zinc-400 uppercase select-none">
+            Research
+          </span>
+          {/* Explicitly labeled single last search link */}
+          {history.length > 0 && !loading && (
+            <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 select-none">
+              <span>Last search:</span>
+              <button
+                onClick={() => { setReport(history[0]); setError(null); }}
+                className={`transition-colors text-left ${
+                  report?.topic.toLowerCase() === history[0].topic.toLowerCase()
+                    ? "text-zinc-300 underline underline-offset-4 decoration-zinc-650"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+                title={history[0].topic}
+              >
+                <span className="max-w-[150px] truncate block">{history[0].topic}</span>
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
-      <div className="print:hidden">
-        <QueryBox onSearch={handleSearch} isLoading={loading} />
-      </div>
-
-      {error && (
-        <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm flex gap-3 max-w-2xl mx-auto print:hidden animate-fadeIn">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <div>
-            <h4 className="font-semibold mb-0.5">Execution Failed</h4>
-            <p className="leading-relaxed opacity-90">{error}</p>
-          </div>
+      {/* Main Body */}
+      <main className="flex-1 w-full max-w-[680px] mx-auto px-4 md:px-0 py-16 flex flex-col gap-10">
+        <div className="space-y-6 print:hidden">
+          {!report && !loading && (
+            <div className="space-y-1.5 animate-fadeIn">
+              <h2 className="text-xl font-normal text-zinc-300">
+                New Synthesis
+              </h2>
+              <p className="text-xs text-zinc-500 max-w-sm leading-relaxed">
+                Query planning, Tavily search aggregation, and vector retrieval report compile.
+              </p>
+            </div>
+          )}
+          <QueryBox onSearch={handleSearch} isLoading={loading} />
         </div>
-      )}
 
-      {loading && (
-        <div className="print:hidden">
-          <Loader />
-        </div>
-      )}
-
-      {report && !loading && (
-        <ReportView data={report} />
-      )}
-
-      {history.length > 0 && !loading && (
-        <section className="border-t border-border/40 pt-8 max-w-2xl mx-auto print:hidden animate-fadeIn">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-              <History className="w-4 h-4 text-slate-500" />
-              Recent Research History
-            </h3>
-            <button
-              onClick={handleClearHistory}
-              className="text-xs text-slate-500 hover:text-red-400 flex items-center gap-1 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear History
-            </button>
+        {/* Error State */}
+        {error && (
+          <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/20 text-zinc-400 text-[13px] flex gap-3 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-zinc-650 pt-0.5" />
+            <div className="space-y-1">
+              <h4 className="font-semibold text-zinc-350">Search Failed</h4>
+              <p className="leading-relaxed opacity-95">{error}</p>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 gap-2.5">
-            {history.map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSelectHistory(item)}
-                className={`w-full text-left p-3 rounded-xl border text-sm transition-all flex justify-between items-center group ${
-                  report?.topic.toLowerCase() === item.topic.toLowerCase()
-                    ? "bg-indigo-500/5 border-indigo-500/30 text-indigo-300"
-                    : "bg-slate-900/40 border-border/80 text-slate-400 hover:text-slate-200 hover:border-slate-700"
-                }`}
-              >
-                <span className="truncate pr-4 font-medium">{item.topic}</span>
-                <span className="text-[10px] uppercase font-semibold text-slate-600 group-hover:text-indigo-400 transition-colors">
-                  Load Report
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-    </main>
+        )}
+
+        {loading && <Loader />}
+
+        {report && !loading && <ReportView data={report} />}
+      </main>
+    </div>
   );
 }
